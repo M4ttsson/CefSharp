@@ -2,14 +2,14 @@
     <PropertyGroup>
         <TargetFramework>net472</TargetFramework>
         <OutputType>WinExe</OutputType>
-        <Platforms>x86;x64</Platforms>
+        <Platforms>x86;x64;ARM64</Platforms>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <UseWindowsForms>true</UseWindowsForms>
         <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <StartupObject>CefSharp.WinForms.Example.Program</StartupObject>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     </PropertyGroup>
 
     <ItemGroup>

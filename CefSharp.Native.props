@@ -34,5 +34,16 @@
         </Content>
       </ItemGroup>
     </When>
+    <When Condition="'$(Platform)' == 'ARM64'">
+      <ItemGroup>
+        <Content Include="@(CefRuntimeWinArm64Locales)">
+          <Link>locales\%(RecursiveDir)%(FileName)%(Extension)</Link>
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+          <PublishState>Included</PublishState>
+          <Visible>false</Visible>
+          <IncludeInVsix>true</IncludeInVsix>
+        </Content>
+      </ItemGroup>
+    </When>
   </Choose>
 </Project>

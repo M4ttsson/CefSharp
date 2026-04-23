@@ -4,7 +4,7 @@
   MSBuild is finding CefSharp.Core.Runtime.dll from the x86/x64 folders and copying it to the bin folder which is a problem
   for targeting AnyCPU and when CefSharpTargetDir is used to move the files into a sub folder.
   We manually remove CefSharp.Core.Runtime.dll etc from ReferenceCopyLocalPaths
-  VS2022 handles file paths differently than VS2019/VS2017 https://github.com/cefsharp/CefSharp/issues/3854 
+  VS2022 handles file paths differently than VS2019/VS2017 https://github.com/cefsharp/CefSharp/issues/3854
   https://thomasfreudenberg.com/archive/2012/11/21/dont-copy-my-referenced-assemblies/
   -->
   <Target Name="CefSharpExcludeCoreRuntimeAfterResolveAssemblyReferences" AfterTargets="ResolveAssemblyReferences" Condition="('$(CefSharpPlatformTarget)' == 'AnyCPU' OR '$(CefSharpTargetDir)' != '') AND $(TargetFrameworkVersion.StartsWith('v4.'))">
@@ -15,11 +15,11 @@
       <ReferenceCopyLocalPaths Remove="@(_CefSharpCoreRuntimeFiltered)" />
     </ItemGroup>
   </Target>
-  
+
   <!--
   For VS2017 when publishing x86/x64 there's CefSharp.Core.Runtime.dll references in both _DeploymentManifestDependencies and _DeploymentManifestFiles
   This causes an Error occurred writing to hard disk exception, so we remove one (we leave the dependency and just remove the file reference).
-  For VS2019 when using PackageReference this target removes CefSharp.Core.Runtime.* from the publish target, $(NuGetProjectStyle) check added. 
+  For VS2019 when using PackageReference this target removes CefSharp.Core.Runtime.* from the publish target, $(NuGetProjectStyle) check added.
   -->
   <Target Name="CefSharpExcludeCoreRuntimeBeforeGenerateApplicationManifest" BeforeTargets="GenerateApplicationManifest" Condition="'$(CefSharpPlatformTarget)' != 'AnyCPU' AND $(TargetFrameworkVersion.StartsWith('v4.')) AND '$(NuGetProjectStyle)' != 'PackageReference'">
     <ItemGroup>
@@ -28,7 +28,7 @@
       <_DeploymentManifestFiles Remove="$(MSBuildThisFileDirectory)..\CefSharp\$(PlatformTarget)\CefSharp.Core.Runtime.xml" />
     </ItemGroup>
   </Target>
-  
+
   <!--
   For AnyCPU ClickOnce Publish Remove CefSharp.Core.Runtime.dll for being included in the bin folder
   TODO: Publish AnyCPU still not working, requires some tweaking as CefSharp.dll file isn't being copied to the x64 folder.
@@ -44,12 +44,12 @@
     </ItemGroup>
   </Target>
 
-  
+
   <!--
   Add to project file for debugging purposes
   <Target Name="CefSharpAfterBuildDebug" AfterTargets="AfterBuild">
     <CallTarget Targets="CefSharpAfterBuildDiagnostic"/>
-  </Target> 
+  </Target>
   -->
   <Target Name="CefSharpAfterBuildDiagnostic">
     <Message Importance="high" Text="CefSharp After Build Diagnostic" />
@@ -79,7 +79,7 @@
     <Message Importance="high" Text="OutDir = $(OutDir)" />
     <Message Importance="high" Text="Prefer32Bit = $(Prefer32Bit)" />
   </Target>
-  
+
   <PropertyGroup>
     <!--
     Used for AnyCPU transforming of app.config
@@ -97,27 +97,28 @@
   <PropertyGroup>
     <!--
     Allowable options are None, Content, NoAction.
-    
+
 	None is the default (same as selecting the None Build Action in Visual Studio) for Nuget packages.config
 	for WinExe/Exe projects (anything that's not Library) see https://github.com/cefsharp/CefSharp/issues/4062
 	None will copy the dependenceis to a directly referencing project file which is useful for library projects
 	that target packages.config as buildTransitive is not supported.
-	
+
     Content is the default (same as selecting the Content Build Action in Visual Studio) for Nuget PackageReference
 	and WinExe/Exe projects (anything that's not Library)
     Technically the older Non-SDK Style project can use PackageReference under VS2019 (possibly VS2017 as well),
     so we use NuGetProjectStyle which is defined in the .nuget.g.props file for projects using PackageReference.
     For class libraries that are often AnyCPU and consuming Exe/WinExe projects that are x64 or x86 the resulting build output
-    is polluted with extra copies in sub folders. Set CefSharpBuildAction to NoAction to avoid copying the files.	
+    is polluted with extra copies in sub folders. Set CefSharpBuildAction to NoAction to avoid copying the files.
     -->
     <CefSharpBuildAction Condition="'$(CefSharpBuildAction)' == '' AND ('$(NuGetProjectStyle)' == 'PackageReference' OR '$(OutputType)' != 'Library')">Content</CefSharpBuildAction>
     <CefSharpBuildAction Condition="'$(CefSharpBuildAction)' == '' AND '$(NuGetProjectStyle)' != 'PackageReference'">None</CefSharpBuildAction>
-    
+
     <CefSharpTargetDir Condition="'$(CefSharpTargetDir)' == ''"></CefSharpTargetDir>
     <!-- Ideally we could use EnsureTrailingSlash, was only added on 2017 so unlikely supported in older version of VS -->
     <CefSharpTargetDir Condition="'$(CefSharpTargetDir)' != '' AND !HasTrailingSlash('$(CefSharpTargetDir)')">$(CefSharpTargetDir)\</CefSharpTargetDir>
     <CefSharpTargetDirAnyCpu32>$(CefSharpTargetDir)x86\</CefSharpTargetDirAnyCpu32>
     <CefSharpTargetDirAnyCpu64>$(CefSharpTargetDir)x64\</CefSharpTargetDirAnyCpu64>
+    <CefSharpTargetDirAnyCpuArm64>$(CefSharpTargetDir)arm64\</CefSharpTargetDirAnyCpuArm64>
     <!--
     For Sdk Projects the PlatformTarget is unreliable (https://github.com/dotnet/sdk/issues/1560)
     When our targets file is imported $(PlatformTarget) will be x86 when the Platform is infact AnyCPU.
@@ -132,13 +133,13 @@
     <CefSharpPlatformTarget Condition="'$(CefSharpPlatformTarget)' == 'Win32'">x86</CefSharpPlatformTarget>
     <CefSharpPlatformTarget Condition="'$(CefSharpPlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' == 'true' AND '$(CefSharpAnyCpuSupport)' == ''">x86</CefSharpPlatformTarget>
     <CefSharpPlatformTarget Condition="'$(CefSharpPlatformTargetOverride)' != ''">$(CefSharpPlatformTargetOverride)</CefSharpPlatformTarget>
-    
+
     <!--
     We use this to check if this property group was loaded so we know when to use our copy targets to workaround
     https://github.com/dotnet/project-system/issues/4158
     -->
     <CefSharpPropertiesLoaded>true</CefSharpPropertiesLoaded>
-    
+
     <!--
     For PackageReference library projects where buildTransitive is supported we'll default to setting CefSharpAnyCpuSupport to true
     This should only require WinExe and Exe projects to specify CefSharpAnyCpuSupport rather than every project in a solution.
@@ -149,10 +150,10 @@
     -->
     <CefSharpAnyCpuSupport Condition="'$(CefSharpAnyCpuSupport)' != 'true' AND '$(NuGetProjectStyle)' == 'PackageReference' AND $(NuGetToolVersion) > '5.0' AND '$(OutputType)' == 'Library'">true</CefSharpAnyCpuSupport>
   </PropertyGroup>
-  
+
   <Choose>
     <!--
-    When CefSharpTargetDir is specified for x86/x64 platforms the files are included in a sub directory, 
+    When CefSharpTargetDir is specified for x86/x64 platforms the files are included in a sub directory,
     The CefSharp.dll file required by the BrowserSubProcess isn't copied by default and won't start, so we include an extra
     copy.
     -->
@@ -202,6 +203,22 @@
             </None>
           </ItemGroup>
         </When>
+        <When Condition="'$(CefSharpPlatformTarget)' == 'ARM64'">
+          <ItemGroup>
+            <None Include="@(CefRedistArm64)">
+              <Link>$(CefSharpTargetDir)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+            </None>
+            <None Include="@(CefSharpCommonBinariesArm64)">
+              <Link>$(CefSharpTargetDir)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+            </None>
+          </ItemGroup>
+        </When>
         <When Condition="'$(CefSharpPlatformTarget)' == 'AnyCPU'">
           <ItemGroup>
             <None Include="@(CefRedist32)">
@@ -228,6 +245,18 @@
               <PublishState>Included</PublishState>
               <Visible>false</Visible>
             </None>
+            <None Include="@(CefRedistArm64)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+            </None>
+            <None Include="@(CefSharpCommonBinariesArm64)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+            </None>
             <!--
             Include CefSharp.dll and CefSharp.Core.dll (we only need CefSharp.dll but it's easier to include both)
             in the arch specific folders as required by the BrowserSubProcess.
@@ -243,7 +272,13 @@
               <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
               <PublishState>Included</PublishState>
               <Visible>false</Visible>
-            </None>     
+            </None>
+            <None Include="@(CefSharpCommonManagedDll)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+            </None>
           </ItemGroup>
         </When>
         <!-- x86 and Win32-->
@@ -285,6 +320,24 @@
             </Content>
           </ItemGroup>
         </When>
+        <When Condition="'$(CefSharpPlatformTarget)' == 'ARM64'">
+          <ItemGroup>
+            <Content Include="@(CefRedistArm64)">
+              <Link>$(CefSharpTargetDir)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+			  <IncludeInVsix>true</IncludeInVsix>
+            </Content>
+            <Content Include="@(CefSharpCommonBinariesArm64)">
+              <Link>$(CefSharpTargetDir)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+			  <IncludeInVsix>true</IncludeInVsix>
+            </Content>
+          </ItemGroup>
+        </When>
         <When Condition="'$(CefSharpPlatformTarget)' == 'AnyCPU'">
           <ItemGroup>
             <Content Include="@(CefRedist32)">
@@ -315,6 +368,20 @@
               <Visible>false</Visible>
 			  <IncludeInVsix>true</IncludeInVsix>
             </Content>
+            <Content Include="@(CefRedistArm64)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+			  <IncludeInVsix>true</IncludeInVsix>
+            </Content>
+            <Content Include="@(CefSharpCommonBinariesArm64)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+			  <IncludeInVsix>true</IncludeInVsix>
+            </Content>
             <!--
             Include CefSharp.dll and CefSharp.Core.dll (we only need CefSharp.dll but it's easier to include both)
             in the arch specific folders as required by the BrowserSubProcess.
@@ -332,7 +399,14 @@
               <PublishState>Included</PublishState>
               <Visible>false</Visible>
 			  <IncludeInVsix>true</IncludeInVsix>
-            </Content>     
+            </Content>
+            <Content Include="@(CefSharpCommonManagedDll)">
+              <Link>$(CefSharpTargetDirAnyCpuArm64)%(RecursiveDir)%(FileName)%(Extension)</Link>
+              <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+              <PublishState>Included</PublishState>
+              <Visible>false</Visible>
+			  <IncludeInVsix>true</IncludeInVsix>
+            </Content>
           </ItemGroup>
         </When>
         <!-- x86 and Win32-->
@@ -357,26 +431,27 @@
       </Choose>
     </When>
   </Choose>
-  
+
   <!--
   For AnyCPU we use a Transform to add entries to app.config if possible
   Otherwise throw error to alert user they need to perform additional action
-  --> 
+  -->
   <UsingTask TaskName="TransformXml" AssemblyFile="$(CefSharpTransformXmlDllPath)" Condition="Exists('$(CefSharpTransformXmlDllPath)') AND '$(CefSharpPlatformTarget)' == 'AnyCPU' AND '$(CefSharpAnyCpuSupport)' == '' AND '$(CefSharpBuildAction)' != 'NoAction'" />
-  
+
   <Target Name="CefSharpCommonAnyCPUConfigTransform" AfterTargets="_CopyAppConfigFile" Condition="'@(AppConfigWithTargetPath)' != '' AND Exists('$(CefSharpTransformXmlDllPath)') AND '$(CefSharpPlatformTarget)' == 'AnyCPU' AND '$(CefSharpAnyCpuSupport)' == '' AND '$(CefSharpBuildAction)' != 'NoAction'">
     <TransformXml Source="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Transform="$(MSBuildThisFileDirectory)..\build\app.config.x86.transform" Destination="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')"/>
     <TransformXml Source="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Transform="$(MSBuildThisFileDirectory)..\build\app.config.x64.transform" Destination="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')"/>
+    <TransformXml Source="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Transform="$(MSBuildThisFileDirectory)..\build\app.config.arm64.transform" Destination="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')"/>
   </Target>
-  
+
   <Target Name="CefSharpPlatformCheck" BeforeTargets="ResolveAssemblyReferences" Condition="('@(AppConfigWithTargetPath)' == '' OR !Exists('$(CefSharpTransformXmlDllPath)')) AND '$(CefSharpPlatformTarget)' == 'AnyCPU' AND '$(CefSharpAnyCpuSupport)' != 'true' AND '$(CefSharpBuildAction)' != 'NoAction'">
-    <Error Text="$(MSBuildThisFileName) is unable to proceeed as your current PlatformTarget is '$(CefSharpPlatformTarget)'. To target AnyCPU please read https://github.com/cefsharp/CefSharp/issues/1714. Alternatively change your PlatformTarget to x86 or x64 and the relevant files will be copied automatically." HelpKeyword="CefSharpSolutionPlatformCheck" />
+    <Error Text="$(MSBuildThisFileName) is unable to proceeed as your current PlatformTarget is '$(CefSharpPlatformTarget)'. To target AnyCPU please read https://github.com/cefsharp/CefSharp/issues/1714. Alternatively change your PlatformTarget to x86, x64 or ARM64 and the relevant files will be copied automatically." HelpKeyword="CefSharpSolutionPlatformCheck" />
   </Target>
-  
+
   <!--
   Issue https://github.com/dotnet/project-system/issues/4158
   The None/Content entries aren't picked up as the .targets file doesn't exist before the Nuget restore (only when using packages.config)
-  As a workaround we manually copy the files using a series of Targets and private itemgroup/propertygroups. 
+  As a workaround we manually copy the files using a series of Targets and private itemgroup/propertygroups.
   Accessing the ItemGroups that exist in the .props files isn't possible, the Targets are handled differently by msbuild/VS2017/VS2019 (worked previous in VS2015)
   so we duplicate the entries private to these tasks. Must be kept in sync with the .props files.
   We cannot use any of the variables defined in this targets file as they won't have been loaded initially.
@@ -388,30 +463,42 @@
   <Target Name="CefSharpCopyFilesAfterNugetRestore" AfterTargets="Build" DependsOnTargets="_CefSharpCopyFilesSetProperties" Condition="'$(NuGetProjectStyle)' != 'PackageReference' AND '$(CefSharpBuildAction)' != 'NoAction' AND '$(CefSharpPropertiesLoaded)' == ''">
     <CallTarget Targets="CefSharpCopyFilesAfterNugetRestore32" Condition="'$(_CefSharpPlatformTarget)' == 'x86' OR '$(_CefSharpPlatformTarget)' == 'AnyCPU'" />
     <CallTarget Targets="CefSharpCopyFilesAfterNugetRestore64" Condition="'$(_CefSharpPlatformTarget)' == 'x64' OR '$(_CefSharpPlatformTarget)' == 'AnyCPU'"/>
+    <CallTarget Targets="CefSharpCopyFilesAfterNugetRestoreArm64" Condition="'$(_CefSharpPlatformTarget)' == 'ARM64' OR '$(_CefSharpPlatformTarget)' == 'AnyCPU'"/>
   </Target>
-  
+
   <Target Name="CefSharpCopyFilesAfterNugetRestore32">
     <Message Importance="high" Text="CefSharp - Files were not copied by MSBuild after Nuget install/restore! Manually copying files to $(CefRedist32TargetDir) as workaround. Please close and re-open $(MSBuildProjectFile)." />
     <CallTarget Targets="CefRedist32CopyResources"/>
-    
+
     <Message Importance="high" Text="Copying CefSharp Common x86 files from $(MSBuildThisFileDirectory)..\CefSharp\x86 to $(CefRedist32TargetDir)" />
     <Copy SourceFiles="@(_CefSharpCommonBinaries32)" DestinationFiles="@(_CefSharpCommonBinaries32->'$(CefRedist32TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-    
+
     <Message Importance="high" Text="Copying CefSharp.dll from $(MSBuildThisFileDirectory)..\lib\net462\CefSharp.dll to $(CefRedist32TargetDir)" />
     <Copy SourceFiles="@(_CefSharpCommonManagedDll)" DestinationFiles="@(_CefSharpCommonManagedDll->'$(CefRedist32TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
-  
+
   <Target Name="CefSharpCopyFilesAfterNugetRestore64">
     <Message Importance="high" Text="CefSharp - Files were not copied by MSBuild after Nuget install/restore! Manually copying files to $(CefRedist64TargetDir) as workaround. Please close and re-open $(MSBuildProjectFile)." />
     <CallTarget Targets="CefRedist64CopyResources"/>
-    
+
     <Message Importance="high" Text="Copying CefSharp Common x64 files from $(MSBuildThisFileDirectory)..\CefSharp\x64 to $(CefRedist64TargetDir)" />
     <Copy SourceFiles="@(_CefSharpCommonBinaries64)" DestinationFiles="@(_CefSharpCommonBinaries64->'$(CefRedist64TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-    
+
     <Message Importance="high" Text="Copying CefSharp.dll from $(MSBuildThisFileDirectory)..\lib\net462\CefSharp.dll to $(CefRedist64TargetDir)" />
     <Copy SourceFiles="@(_CefSharpCommonManagedDll)" DestinationFiles="@(_CefSharpCommonManagedDll->'$(CefRedist64TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
-  
+
+  <Target Name="CefSharpCopyFilesAfterNugetRestoreArm64">
+    <Message Importance="high" Text="CefSharp - Files were not copied by MSBuild after Nuget install/restore! Manually copying files to $(CefRedistArm64TargetDir) as workaround. Please close and re-open $(MSBuildProjectFile)." />
+    <CallTarget Targets="CefRedistArm64CopyResources"/>
+
+    <Message Importance="high" Text="Copying CefSharp Common arm64 files from $(MSBuildThisFileDirectory)..\CefSharp\arm64 to $(CefRedistArm64TargetDir)" />
+    <Copy SourceFiles="@(_CefSharpCommonBinariesArm64)" DestinationFiles="@(_CefSharpCommonBinariesArm64->'$(CefRedistArm64TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+
+    <Message Importance="high" Text="Copying CefSharp.dll from $(MSBuildThisFileDirectory)..\lib\net462\CefSharp.dll to $(CefRedistArm64TargetDir)" />
+    <Copy SourceFiles="@(_CefSharpCommonManagedDll)" DestinationFiles="@(_CefSharpCommonManagedDll->'$(CefRedistArm64TargetDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
   <Target Name="_CefSharpCopyFilesSetProperties">
     <PropertyGroup>
       <!-- This is must be kept in sync with the main property group above -->
@@ -420,19 +507,22 @@
       <_CefSharpPlatformTarget Condition="'$(_CefSharpPlatformTarget)' == 'Win32'">x86</_CefSharpPlatformTarget>
       <_CefSharpPlatformTarget Condition="'$(_CefSharpPlatformTarget)' == 'AnyCPU' AND '$(Prefer32Bit)' == 'true' AND '$(CefSharpAnyCpuSupport)' == ''">x86</_CefSharpPlatformTarget>
       <_CefSharpPlatformTarget Condition="'$(CefSharpPlatformTargetOverride)' != ''">$(CefSharpPlatformTargetOverride)</_CefSharpPlatformTarget>
-    
+
       <CefRedist32TargetDir Condition="'$(CefRedist32TargetDir)' == ''">$(TargetDir)$(CefSharpTargetDir)</CefRedist32TargetDir>
       <CefRedist64TargetDir Condition="'$(CefRedist64TargetDir)' == ''">$(TargetDir)$(CefSharpTargetDir)</CefRedist64TargetDir>
+      <CefRedistArm64TargetDir Condition="'$(CefRedistArm64TargetDir)' == ''">$(TargetDir)$(CefSharpTargetDir)</CefRedistArm64TargetDir>
       <CefRedist32TargetDir Condition="'$(_CefSharpPlatformTarget)' == 'AnyCPU'">$(CefRedist32TargetDir)x86\</CefRedist32TargetDir>
       <CefRedist64TargetDir Condition="'$(_CefSharpPlatformTarget)' == 'AnyCPU'">$(CefRedist64TargetDir)x64\</CefRedist64TargetDir>
+      <CefRedistArm64TargetDir Condition="'$(_CefSharpPlatformTarget)' == 'AnyCPU'">$(CefRedistArm64TargetDir)arm64\</CefRedistArm64TargetDir>
     </PropertyGroup>
     <ItemGroup>
       <_CefSharpCommonManagedDll Include="$(MSBuildThisFileDirectory)..\lib\net462\CefSharp.dll" />
       <_CefSharpCommonBinaries32 Include="$(MSBuildThisFileDirectory)..\CefSharp\x86\*.*" />
       <_CefSharpCommonBinaries64 Include="$(MSBuildThisFileDirectory)..\CefSharp\x64\*.*" />
+      <_CefSharpCommonBinariesArm64 Include="$(MSBuildThisFileDirectory)..\CefSharp\arm64\*.*" />
     </ItemGroup>
   </Target>
-  
+
   <!--
   Sdk Style Projects don't set PlatformTarget correctly issue https://github.com/dotnet/sdk/issues/1560
   The PlatformTarget value before build  for AnyCPU will end up as x86 and afterbuild the value will

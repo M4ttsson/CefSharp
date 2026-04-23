@@ -101,7 +101,11 @@ function BuildSolution
     $Arch = $Platform
     if (!$IsNetCoreBuild -and $Arch -eq "x86")
     {
-        $Arch="win32";
+        $Arch="Win32";
+    }
+    elseif (!$IsNetCoreBuild -and $Arch -eq "arm64")
+    {
+        $Arch="ARM64";
     }
 
     # Restore Nuget packages
@@ -492,12 +496,11 @@ if($IsNetCoreBuild)
 }
 else
 {
-    $ARCHES.Remove("arm64")
     $CefSln = Join-Path $WorkingDir 'CefSharp3.sln'
     $NugetPackagePath = "nuget";
     $NupkgFiles = @('CefSharp.Common.nuspec', 'CefSharp.WinForms.nuspec', 'CefSharp.Wpf.nuspec', 'CefSharp.OffScreen.nuspec')
     $VCXProjPackageConfigFiles = @('CefSharp.Core.Runtime\packages.CefSharp.Core.Runtime.config', 'CefSharp.BrowserSubprocess.Core\packages.CefSharp.BrowserSubprocess.Core.config');
-    $SupportedArches.AddRange(@("x86", "x64"));
+    $SupportedArches.AddRange(@("x86", "x64", "arm64"));
 }
 
 # Extract the current CEF Redist version from the CefSharp.Core.Runtime\packages.CefSharp.Core.Runtime.config file
@@ -566,6 +569,7 @@ WriteVersionToManifest "CefSharp.WinForms.Example\app.manifest"
 WriteVersionToManifest "CefSharp.Wpf.Example\app.manifest"
 
 WriteVersionToTransform "NuGet\CefSharp.Common.app.config.x64.transform"
+WriteVersionToTransform "NuGet\CefSharp.Common.app.config.arm64.transform"
 WriteVersionToTransform "NuGet\CefSharp.Common.app.config.x86.transform"
 
 WriteVersionToResourceFile "CefSharp.BrowserSubprocess.Core\Resource.rc"

@@ -176,6 +176,8 @@ namespace CefSharp
         /// <returns>true if successful; otherwise, false.</returns>
         public static bool Initialize(CefSettingsBase settings)
         {
+            CefRuntime.AssertNetFrameworkArm64Support();
+
             using (settings)
             {
                 return Core.Cef.Initialize(settings.settings);
@@ -193,6 +195,8 @@ namespace CefSharp
         /// <returns>true if successful; otherwise, false.</returns>
         public static bool Initialize(CefSettingsBase settings, bool performDependencyCheck)
         {
+            CefRuntime.AssertNetFrameworkArm64Support();
+
             using (settings)
             {
                 return Core.Cef.Initialize(settings.settings, performDependencyCheck);
@@ -211,6 +215,8 @@ namespace CefSharp
         /// <returns>true if successful; otherwise, false.</returns>
         public static bool Initialize(CefSettingsBase settings, bool performDependencyCheck, IBrowserProcessHandler browserProcessHandler)
         {
+            CefRuntime.AssertNetFrameworkArm64Support();
+
             using (settings)
             {
                 return Core.Cef.Initialize(settings.settings, performDependencyCheck, browserProcessHandler);
@@ -229,6 +235,8 @@ namespace CefSharp
         /// <returns>true if successful; otherwise, false.</returns>
         public static bool Initialize(CefSettingsBase settings, bool performDependencyCheck, IApp cefApp)
         {
+            CefRuntime.AssertNetFrameworkArm64Support();
+
             using (settings)
             {
                 return Core.Cef.Initialize(settings.settings, performDependencyCheck, cefApp);
@@ -252,6 +260,8 @@ namespace CefSharp
         /// </remarks>
         public static Task<bool> InitializeAsync(CefSettingsBase settings, bool performDependencyCheck = true, IBrowserProcessHandler browserProcessHandler = null)
         {
+            CefRuntime.AssertNetFrameworkArm64Support();
+
             using (settings)
             {
                 try

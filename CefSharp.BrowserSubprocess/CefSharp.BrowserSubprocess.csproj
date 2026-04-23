@@ -2,14 +2,14 @@
     <PropertyGroup>
         <TargetFramework>net462</TargetFramework>
         <OutputType>WinExe</OutputType>
-        <Platforms>x86;x64</Platforms>
+        <Platforms>x86;x64;ARM64</Platforms>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\CefSharp.snk</AssemblyOriginatorKeyFile>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <StartupObject>CefSharp.BrowserSubprocess.Program</StartupObject>
-        <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     </PropertyGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -19,6 +19,11 @@
         <DebugSymbols>true</DebugSymbols>
         <Optimize>true</Optimize>
         <DebugType>pdbonly</DebugType>
+    </PropertyGroup>
+    <PropertyGroup>
+        <CefSharpDevEnvDir>$(DevEnvDir)</CefSharpDevEnvDir>
+        <CefSharpDevEnvDir Condition="('$(CefSharpDevEnvDir)' == '' or '$(CefSharpDevEnvDir)' == '*Undefined*') and '$(VSINSTALLDIR)' != ''">$(VSINSTALLDIR)Common7\IDE\</CefSharpDevEnvDir>
+        <CefSharpDevEnvDir Condition="('$(CefSharpDevEnvDir)' == '' or '$(CefSharpDevEnvDir)' == '*Undefined*') and Exists('$(MSBuildBinPath)\..\..\..\..\Common7\IDE\')">$(MSBuildBinPath)\..\..\..\..\Common7\IDE\</CefSharpDevEnvDir>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System.ServiceModel" />
@@ -41,6 +46,6 @@
       </PackageReference>
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="if $(PlatformName) == x86 (&#xD;&#xA;  call &quot;$(DevEnvDir)..\..\VC\Auxiliary\Build\vcvars32.bat&quot;&#xD;&#xA;  editbin /largeaddressaware /TSAWARE &quot;$(TargetPath)&quot;  &#xD;&#xA;  sn -R &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\CefSharp.snk&quot;&#xD;&#xA;) else (&#xD;&#xA;  call &quot;$(DevEnvDir)..\..\VC\Auxiliary\Build\vcvars64.bat&quot;&#xD;&#xA;  editbin /TSAWARE /STACK:8388608 &quot;$(TargetPath)&quot;&#xD;&#xA;  sn -R &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\CefSharp.snk&quot;&#xD;&#xA;)" />
+      <Exec Command="if $(PlatformName) == x86 (&#xD;&#xA;  call &quot;$(CefSharpDevEnvDir)..\..\VC\Auxiliary\Build\vcvars32.bat&quot;&#xD;&#xA;  editbin /largeaddressaware /TSAWARE &quot;$(TargetPath)&quot;  &#xD;&#xA;  sn -R &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\CefSharp.snk&quot;&#xD;&#xA;) else if $(PlatformName) == ARM64 (&#xD;&#xA;  call &quot;$(CefSharpDevEnvDir)..\..\VC\Auxiliary\Build\vcvarsamd64_arm64.bat&quot;&#xD;&#xA;  editbin /TSAWARE /STACK:8388608 &quot;$(TargetPath)&quot;&#xD;&#xA;  sn -R &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\CefSharp.snk&quot;&#xD;&#xA;) else (&#xD;&#xA;  call &quot;$(CefSharpDevEnvDir)..\..\VC\Auxiliary\Build\vcvars64.bat&quot;&#xD;&#xA;  editbin /TSAWARE /STACK:8388608 &quot;$(TargetPath)&quot;&#xD;&#xA;  sn -R &quot;$(TargetPath)&quot; &quot;$(ProjectDir)..\CefSharp.snk&quot;&#xD;&#xA;)" />
     </Target>
 </Project>

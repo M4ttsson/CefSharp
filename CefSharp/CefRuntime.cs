@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Microsoft.Win32;
 
 namespace CefSharp
 {
@@ -14,6 +15,7 @@ namespace CefSharp
     /// </summary>
     public static class CefRuntime
     {
+        private const int NetFramework481ReleaseKey = 533320;
         private static ResolveEventHandler currentDomainAssemblyResolveHandler;
 
         /// <summary>
@@ -32,6 +34,8 @@ namespace CefSharp
         /// (</param>
         public static void SubscribeAnyCpuAssemblyResolver(string basePath = null)
         {
+            AssertNetFrameworkArm64Support();
+
             if(currentDomainAssemblyResolveHandler != null)
             {
                 throw new Exception("UseAnyCpuAssemblyResolver has already been called, call ");
@@ -47,9 +51,7 @@ namespace CefSharp
                 if (args.Name.StartsWith("CefSharp.Core.Runtime"))
                 {
                     string assemblyName = args.Name.Split(new[] { ',' }, 2)[0] + ".dll";
-                    string archSpecificPath = Path.Combine(basePath,
-                                                           Environment.Is64BitProcess ? "x64" : "x86",
-                                                           assemblyName);
+                    string archSpecificPath = Path.Combine(basePath, GetRuntimeDirectory(), assemblyName);
 
                     return File.Exists(archSpecificPath)
                                ? System.Reflection.Assembly.LoadFile(archSpecificPath)
@@ -89,13 +91,14 @@ namespace CefSharp
         public static void LoadCefSharpCoreRuntimeAnyCpu(string basePath = null)
         {
             const string assemblyName = "CefSharp.Core.Runtime.dll";
+            AssertNetFrameworkArm64Support();
 
             if (basePath == null)
             {
                 basePath = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
             }
 
-            var env = Environment.Is64BitProcess ? "x64" : "x86";
+            var env = GetRuntimeDirectory();
             string archSpecificPath = Path.Combine(basePath,
                                                    env,
                                                    assemblyName);
@@ -108,6 +111,53 @@ namespace CefSharp
             {
                 throw new FileNotFoundException("Unable to load for arch " + env, archSpecificPath);
             }
+        }
+
+        public static void AssertNetFrameworkArm64Support()
+        {
+            if (!IsArm64Process())
+            {
+                return;
+            }
+
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
+            {
+                var release = key?.GetValue("Release") as int?;
+
+                if (release.GetValueOrDefault() < NetFramework481ReleaseKey)
+                {
+                    throw new PlatformNotSupportedException(".NET Framework 4.8.1 or newer is required for CefSharp on Windows ARM64.");
+                }
+            }
+        }
+
+        private static string GetRuntimeIdentifier()
+        {
+            if (IsArm64Process())
+            {
+                return "win-arm64";
+            }
+
+            return Environment.Is64BitProcess ? "win-x64" : "win-x86";
+        }
+
+        private static string GetRuntimeDirectory()
+        {
+            switch (GetRuntimeIdentifier())
+            {
+                case "win-x64":
+                    return "x64";
+                case "win-arm64":
+                    return "arm64";
+                default:
+                    return "x86";
+            }
+        }
+
+        private static bool IsArm64Process()
+        {
+            return Environment.Is64BitProcess &&
+                   string.Equals(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE"), "ARM64", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
