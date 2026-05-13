@@ -5,7 +5,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Microsoft.Win32;
 
 namespace CefSharp
 {
@@ -15,7 +14,6 @@ namespace CefSharp
     /// </summary>
     public static class CefRuntime
     {
-        private const int NetFramework481ReleaseKey = 533320;
         private static ResolveEventHandler currentDomainAssemblyResolveHandler;
 
         /// <summary>
@@ -34,8 +32,6 @@ namespace CefSharp
         /// (</param>
         public static void SubscribeAnyCpuAssemblyResolver(string basePath = null)
         {
-            AssertNetFrameworkArm64Support();
-
             if(currentDomainAssemblyResolveHandler != null)
             {
                 throw new Exception("UseAnyCpuAssemblyResolver has already been called, call ");
@@ -91,7 +87,6 @@ namespace CefSharp
         public static void LoadCefSharpCoreRuntimeAnyCpu(string basePath = null)
         {
             const string assemblyName = "CefSharp.Core.Runtime.dll";
-            AssertNetFrameworkArm64Support();
 
             if (basePath == null)
             {
@@ -113,51 +108,29 @@ namespace CefSharp
             }
         }
 
-        public static void AssertNetFrameworkArm64Support()
-        {
-            if (!IsArm64Process())
-            {
-                return;
-            }
-
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
-            {
-                var release = key?.GetValue("Release") as int?;
-
-                if (release.GetValueOrDefault() < NetFramework481ReleaseKey)
-                {
-                    throw new PlatformNotSupportedException(".NET Framework 4.8.1 or newer is required for CefSharp on Windows ARM64.");
-                }
-            }
-        }
-
-        private static string GetRuntimeIdentifier()
-        {
-            if (IsArm64Process())
-            {
-                return "win-arm64";
-            }
-
-            return Environment.Is64BitProcess ? "win-x64" : "win-x86";
-        }
-
         private static string GetRuntimeDirectory()
         {
-            switch (GetRuntimeIdentifier())
+            var processArchitecture = GetProcessArchitecture();
+
+            if (string.Equals(processArchitecture, "Arm64", StringComparison.OrdinalIgnoreCase))
             {
-                case "win-x64":
-                    return "x64";
-                case "win-arm64":
-                    return "arm64";
-                default:
-                    return "x86";
+                return "arm64";
             }
+
+            if (string.Equals(processArchitecture, "X64", StringComparison.OrdinalIgnoreCase) || Environment.Is64BitProcess)
+            {
+                return "x64";
+            }
+
+            return "x86";
         }
 
-        private static bool IsArm64Process()
+        private static string GetProcessArchitecture()
         {
-            return Environment.Is64BitProcess &&
-                   string.Equals(Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE"), "ARM64", StringComparison.OrdinalIgnoreCase);
+            var runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation");
+            var processArchitectureProperty = runtimeInformationType?.GetProperty("ProcessArchitecture", BindingFlags.Public | BindingFlags.Static);
+
+            return processArchitectureProperty?.GetValue(null, null)?.ToString();
         }
     }
 }

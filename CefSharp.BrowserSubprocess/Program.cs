@@ -18,8 +18,6 @@ namespace CefSharp.BrowserSubprocess
     {
         public static int Main(string[] args)
         {
-            CefRuntime.AssertNetFrameworkArm64Support();
-
             Debug.WriteLine("BrowserSubprocess starting up with command line: " + string.Join("\n", args));
 
             //Add your own custom implementation of IRenderProcessHandler here
